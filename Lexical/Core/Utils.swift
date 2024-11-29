@@ -39,10 +39,12 @@ public func generateKey(node: Node) throws -> NodeKey? {
   return stringKey
 }
 
-private func internallyMarkChildrenAsDirty(  element: ElementNode,
-                                             nodeMap: [NodeKey: Node],
-                                             editor: Editor,
-                                             status: DirtyStatusCause = .editorInitiated) {
+private func internallyMarkChildrenAsDirty(
+  element: ElementNode,
+  nodeMap: [NodeKey: Node],
+  editor: Editor,
+  status: DirtyStatusCause = .editorInitiated
+) {
   for childKey in element.children {
     editor.dirtyNodes[childKey] = status
     if let childElement = nodeMap[childKey] as? ElementNode {
@@ -55,7 +57,8 @@ private func internallyMarkParentElementsAsDirty(
   parentKey: NodeKey,
   nodeMap: [NodeKey: Node],
   editor: Editor,
-  status: DirtyStatusCause = .editorInitiated) {
+  status: DirtyStatusCause = .editorInitiated
+) {
   var nextParentKey: NodeKey? = parentKey
 
   while let unwrappedParentKey = nextParentKey {
@@ -72,7 +75,7 @@ private func internallyMarkParentElementsAsDirty(
     editor.dirtyNodes[unwrappedParentKey] = status
     nextParentKey = node?.parent
   }
-} // Never use this function directly! It will break
+}  // Never use this function directly! It will break
 // the cloning heuristic. Instead use node.getWritable().
 
 internal func internallyMarkNodeAsDirty(node: Node, cause: DirtyStatusCause = .editorInitiated) {
@@ -97,7 +100,8 @@ internal func internallyMarkNodeAsDirty(node: Node, cause: DirtyStatusCause = .e
   editor.dirtyNodes[latest.key] = cause
 }
 
-internal func internallyMarkSiblingsAsDirty(node: Node, status: DirtyStatusCause = .editorInitiated) {
+internal func internallyMarkSiblingsAsDirty(node: Node, status: DirtyStatusCause = .editorInitiated)
+{
   if let previousNode = node.getPreviousSibling() {
     internallyMarkNodeAsDirty(node: previousNode, cause: status)
   }
@@ -138,7 +142,9 @@ public func createCodeHighlightNode(text: String, highlightType: String?) -> Cod
   CodeHighlightNode(text: text, highlightType: highlightType)
 }
 
-public func toggleTextFormatType(format: TextFormat, type: TextFormatType, alignWithFormat: TextFormat?) -> TextFormat {
+public func toggleTextFormatType(
+  format: TextFormat, type: TextFormatType, alignWithFormat: TextFormat?
+) -> TextFormat {
   var activeFormat = format
   let isStateFlagPresent = format.isTypeSet(type: type)
   var flag = false
@@ -224,7 +230,7 @@ public func isTokenOrSegmented(_ node: TextNode?) -> Bool {
 
 public func getRoot() -> RootNode? {
   guard let editorState = getActiveEditorState(),
-        let rootNode = editorState.nodeMap[kRootNodeKey] as? RootNode
+    let rootNode = editorState.nodeMap[kRootNodeKey] as? RootNode
   else { return nil }
 
   return rootNode
@@ -270,19 +276,23 @@ public func getNodeHierarchy(editorState: EditorState?) throws -> String {
         } else {
           formatString = ""
         }
-        description.append("\(indentation)(\(node.key)) \(node.type.rawValue) \"\(textNode.getTextPart())\" \(formatString)")
+        description.append(
+          "\(indentation)(\(node.key)) \(node.type.rawValue) \"\(textNode.getTextPart())\" \(formatString)"
+        )
       } else {
         description.append("\(indentation)(\(node.key)) \(node.type.rawValue)")
       }
 
       if let elementNode = node as? ElementNode {
-        let childNodes = elementNode.children.map({ (getNodeByKey(key: $0) ?? Node(), depth + 1) }).reversed()
+        let childNodes = elementNode.children.map({ (getNodeByKey(key: $0) ?? Node(), depth + 1) })
+          .reversed()
         currentNodes.append(contentsOf: childNodes)
       }
     } while !currentNodes.isEmpty
 
     hierarchyString = description.joined(separator: "\n")
-    cacheString = sortedNodeMap.map({ node in "\(node.key): \(node.value.type)" }).joined(separator: ", ")
+    cacheString = sortedNodeMap.map({ node in "\(node.key): \(node.value.type)" }).joined(
+      separator: ", ")
   }
 
   return "Tree:\n\(hierarchyString)\nCache:\n\(cacheString)"
@@ -321,8 +331,12 @@ func checkSelectionIsOnlyLinebreak(selection: RangeSelection) throws -> Bool {
   return nodes.count == 1 && nodes.contains(where: { $0 is LineBreakNode })
 }
 
-public func sliceSelectedTextNodeContent(selection: BaseSelection, textNode: TextNode) throws -> TextNode {
-  if try textNode.isSelected(), !textNode.isSegmented(), !textNode.isToken(), let selection = selection as? RangeSelection {
+public func sliceSelectedTextNodeContent(selection: BaseSelection, textNode: TextNode) throws
+  -> TextNode
+{
+  if try textNode.isSelected(), !textNode.isSegmented(), !textNode.isToken(),
+    let selection = selection as? RangeSelection
+  {
     // && ($isRangeSelection(selection) || $isGridSelection(selection)){
     let anchorNode = try selection.anchor.getNode()
     let focusNode = try selection.focus.getNode()
@@ -376,22 +390,17 @@ public func decoratorView(forKey key: NodeKey, createIfNecessary: Bool) -> UIVie
   switch cacheItem {
   case .needsCreation:
     guard let node = getNodeByKey(key: key) as? DecoratorNode else {
-      editor.log(.editor, .warning, "Requested decorator view for a node that is not a decorator node")
       return nil
     }
     let newView = node.createView()
     node.decorate(view: newView)
     editor.decoratorCache[key] = DecoratorCacheItem.unmountedCachedView(newView)
-    editor.log(.editor, .verbose, "Creating view (and setting to unmounted): key \(key)")
     return newView
   case .cachedView(let view):
-    editor.log(.editor, .verbose, "Returning cached view: key \(key)")
     return view
   case .unmountedCachedView(let view):
-    editor.log(.editor, .verbose, "Returning unmounted cached view: key \(key)")
     return view
   case .needsDecorating(let view):
-    editor.log(.editor, .verbose, "Returning needs decorating cached view: key \(key)")
     return view
   }
 }
@@ -421,11 +430,9 @@ public func findMatchingParent(startingNode: Node?, findFn: FindFunction) -> Nod
   return nil
 }
 
-/**
- *Returns the element node of the nearest ancestor, otherwise throws an error.
- * @param startNode - The starting node of the search
- * @returns The ancestor node found
- */
+/// *Returns the element node of the nearest ancestor, otherwise throws an error.
+/// * @param startNode - The starting node of the search
+/// * @returns The ancestor node found
 public func getNearestBlockElementAncestorOrThrow(startNode: Node) throws -> ElementNode {
   let blockNode = findMatchingParent(startingNode: startNode) { node in
     if let elementNode = node as? ElementNode {
@@ -448,13 +455,11 @@ public func applyNodeReplacement<N: Node>(
   return node as N
 }
 
-/**
- * Takes a node and traverses up its ancestors (toward the root node)
- * in order to find a specific type of node.
- * @param node - the node to begin searching.
- * @param klass - an instance of the type of node to look for.
- * @returns the node of type klass that was passed, or null if none exist.
- */
+/// Takes a node and traverses up its ancestors (toward the root node)
+/// in order to find a specific type of node.
+/// @param node - the node to begin searching.
+/// @param klass - an instance of the type of node to look for.
+/// @returns the node of type klass that was passed, or null if none exist.
 public func getNearestNodeOfType<T: ElementNode>(
   node: Node,
   type: NodeType
@@ -494,7 +499,8 @@ public func maybeMoveChildrenSelectionToParent(
     throw LexicalError.invariantViolation("TODO")
   }
   let selection = try getSelection()
-  guard let selection = selection as? RangeSelection, let parentNode = parentNode as? ElementNode else {
+  guard let selection = selection as? RangeSelection, let parentNode = parentNode as? ElementNode
+  else {
     // Only works on range selection
     return selection
   }
@@ -548,7 +554,9 @@ private func resolveElement(
     if isBackward, focusOffset == 0, let indexWithinParent = block.getIndexWithinParent() {
       offset = indexWithinParent
       block = parent
-    } else if !isBackward, focusOffset == block.getChildrenSize(), let indexWithinParent = block.getIndexWithinParent() {
+    } else if !isBackward, focusOffset == block.getChildrenSize(),
+      let indexWithinParent = block.getIndexWithinParent()
+    {
       offset = indexWithinParent + 1
       block = parent
     }
@@ -565,10 +573,11 @@ public func getAdjacentNode(
     return resolveElement(element: focusElement, isBackward: isBackward, focusOffset: focusOffset)
   } else {
     let focusNode = try focus.getNode()
-    if
-      (isBackward && focusOffset == 0) ||
-        (!isBackward && focusOffset == focusNode.getTextContentSize()) {
-      let possibleNode = isBackward
+    if (isBackward && focusOffset == 0)
+      || (!isBackward && focusOffset == focusNode.getTextContentSize())
+    {
+      let possibleNode =
+        isBackward
         ? focusNode.getPreviousSibling()
         : focusNode.getNextSibling()
 

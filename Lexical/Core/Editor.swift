@@ -266,7 +266,7 @@ public class Editor: NSObject {
   ///   - listener: The code to run when the command is dispatched.
   ///   - priority: The priority for your handler. Higher priority handlers run before lower priority handlers.
   /// - Returns: A closure to remove the command handler.
-  public func registerCommand(type: CommandType, listener: @escaping CommandListener, priority: CommandPriority = CommandPriority.Editor, shouldWrapInUpdateBlock: Bool = true) -> RemovalHandler {
+  public func registerCommand(type: CommandType, listener: @escaping CommandListener, priority: CommandPriority = CommandPriority.Editor) -> RemovalHandler {
     let uuid = UUID()
 
     if self.commands[type] == nil {
@@ -282,9 +282,7 @@ public class Editor: NSObject {
       )
     }
 
-    let wrapper = CommandListenerWithMetadata(listener: listener, shouldWrapInUpdateBlock: shouldWrapInUpdateBlock)
-
-    self.commands[type]?[priority]?[uuid] = wrapper
+    self.commands[type]?[priority]?[uuid] = listener
 
     return { [weak self] in
       guard let self else { return }
@@ -604,9 +602,7 @@ public class Editor: NSObject {
       return
     }
 
-    let isInsideNestedEditorBlock = (isEditorPresentInUpdateStack(self))
-    let previousEditorStateForListeners = editorState
-    let dirtyNodesForListeners = dirtyNodes
+    let isInsideNestedEditorBlock = (isEditorPresentInUpdateStack(self)) && !isReadOnlyMode()
 
     try runWithStateLexicalScopeProperties(activeEditor: self, activeEditorState: pendingEditorState, readOnlyMode: false) {
       let previouslyUpdating = self.isUpdating
@@ -679,6 +675,9 @@ public class Editor: NSObject {
         }
       }
 
+      triggerUpdateListeners(activeEditor: self, activeEditorState: pendingEditorState, previousEditorState: editorState, dirtyNodes: dirtyNodes)
+      try triggerTextContentListeners(activeEditor: self, activeEditorState: pendingEditorState, previousEditorState: editorState)
+
       editorState = pendingEditorState
       self.pendingEditorState = nil
       dirtyNodes.removeAll()
@@ -686,18 +685,6 @@ public class Editor: NSObject {
       cloneNotNeeded.removeAll()
 
       mountDecoratorSubviewsIfNecessary()
-    }
-
-    if isInsideNestedEditorBlock {
-      return
-    }
-
-    // These have to be outside of the above runWithStateLexicalScopeProperties{} closure, because: if any update block is triggered from inside that
-    // closure, it counts as a nested update. But listeners, which happen after we've run the reconciler, should not count as nested for this purpose;
-    // if an update is triggered from within an update listener, it needs to run the reconciler a second time.
-    try runWithStateLexicalScopeProperties(activeEditor: self, activeEditorState: pendingEditorState, readOnlyMode: true) {
-      triggerUpdateListeners(activeEditor: self, activeEditorState: pendingEditorState, previousEditorState: previousEditorStateForListeners, dirtyNodes: dirtyNodesForListeners)
-      try triggerTextContentListeners(activeEditor: self, activeEditorState: pendingEditorState, previousEditorState: previousEditorStateForListeners)
     }
 
     frontend?.isUpdatingNativeSelection = false

@@ -10,10 +10,7 @@ import Lexical
 import UIKit
 
 extension NodeType {
-  // don't make this `listItem` keep it all lowercased
-  // so that it matches the JavaScript node type declaration
-  // in an attempt to make the 2 contexts compatible
-  static let listItem = NodeType(rawValue: "listitem")
+  static let listItem = NodeType(rawValue: "listItem")
 }
 
 public class ListItemNode: ElementNode {
@@ -30,6 +27,10 @@ public class ListItemNode: ElementNode {
 
   public required init(from decoder: Decoder) throws {
     try super.init(from: decoder)
+  }
+
+  override open func encode(to encoder: Encoder) throws {
+    try super.encode(to: encoder)
   }
 
   override public func clone() -> Self {
@@ -154,7 +155,8 @@ public class ListItemNode: ElementNode {
       isNestedListNode(node: prevSibling),
       isNestedListNode(node: nextSibling),
       let list1 = prevSibling.getFirstChild() as? ListNode,
-      let list2 = nextSibling.getFirstChild() as? ListNode {
+      let list2 = nextSibling.getFirstChild() as? ListNode
+    {
       try mergeLists(list1: list1, list2: list2)
       try nextSibling.remove()
     } else if let nextSibling {

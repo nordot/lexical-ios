@@ -575,7 +575,8 @@ private func resolveSelectionPointOnBoundary(
       if
         let prevSibling = prevSibling as? ElementNode,
         !isCollapsed,
-        prevSibling.isInline() {
+        prevSibling.isInline()
+      {
         point.key = prevSibling.key
         point.offset = prevSibling.getChildrenSize()
         point.type = .element
@@ -584,7 +585,7 @@ private func resolveSelectionPointOnBoundary(
         point.offset = prevSibling.getTextContent().lengthAsNSString()
       }
     } else if
-      isCollapsed || !isBackward,
+      (isCollapsed || !isBackward),
       prevSibling == nil,
       let parent,
       parent.isInline() {
@@ -603,11 +604,12 @@ private func resolveSelectionPointOnBoundary(
       point.offset = 0
       point.type = .element
     } else if
-      isCollapsed || isBackward,
+      (isCollapsed || isBackward),
       nextSibling == nil,
       let parent,
       parent.isInline(),
-      !parent.canInsertTextAfter() {
+      !parent.canInsertTextAfter()
+    {
       let parentSibling = parent.getNextSibling()
       if let parentSibling = parentSibling as? TextNode {
         point.key = parentSibling.key
@@ -643,7 +645,8 @@ internal func normalizeSelectionPointsForBoundaries(
     if
       editor.isComposing(),
       editor.compositionKey != anchor.key,
-      let lastSelection = lastSelection as? RangeSelection {
+      let lastSelection = lastSelection as? RangeSelection
+    {
       let lastAnchor = lastSelection.anchor
       let lastFocus = lastSelection.focus
       anchor.key = lastAnchor.key

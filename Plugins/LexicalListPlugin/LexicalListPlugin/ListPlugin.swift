@@ -52,8 +52,6 @@ open class ListPlugin: Plugin {
           return
         }
 
-        let isFirstLine = (glyphRange.location == 0)
-
         var attributes = textStorage.attributes(at: characterRange.location, effectiveRange: nil)
 
         var spacingBefore = 0.0
@@ -61,7 +59,7 @@ open class ListPlugin: Plugin {
           mutableParagraphStyle.headIndent = 0
           mutableParagraphStyle.firstLineHeadIndent = 0
           mutableParagraphStyle.tailIndent = 0
-          spacingBefore = isFirstLine ? 0 : paragraphStyle.paragraphSpacingBefore
+          spacingBefore = paragraphStyle.paragraphSpacingBefore
           mutableParagraphStyle.paragraphSpacingBefore = 0
           attributes[.paragraphStyle] = mutableParagraphStyle
         }

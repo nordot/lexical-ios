@@ -64,6 +64,12 @@ private class ReconcilerState {
  * that the keyboard is expecting.
  */
 internal struct MarkedTextOperation {
+  internal init(createMarkedText: Bool, selectionRangeToReplace: NSRange, markedTextString: String, markedTextInternalSelection: NSRange) {
+    self.createMarkedText = createMarkedText
+    self.selectionRangeToReplace = selectionRangeToReplace
+    self.markedTextString = markedTextString
+    self.markedTextInternalSelection = markedTextInternalSelection
+  }
 
   let createMarkedText: Bool
   let selectionRangeToReplace: NSRange

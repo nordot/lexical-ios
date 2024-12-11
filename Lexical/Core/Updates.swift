@@ -78,8 +78,7 @@ public func triggerCommandListeners(activeEditor: Editor, type: CommandType, pay
       }
 
       // TODO: handle throws
-      for wrapper in listeners {
-        let listener = wrapper.listener
+      for listener in listeners {
         if listener(payload) {
           handled = true
           return
@@ -88,17 +87,8 @@ public func triggerCommandListeners(activeEditor: Editor, type: CommandType, pay
     }
   }
 
-  var shouldWrapInUpdateBlock = false
-  for p in (listenersInPriorityOrder ?? [:]).values {
-    for metadata in p.values {
-      if metadata.shouldWrapInUpdateBlock {
-        shouldWrapInUpdateBlock = true
-      }
-    }
-  }
-
   do {
-    if shouldWrapInUpdateBlock && !activeEditor.isUpdating {
+    if !activeEditor.isUpdating {
       try activeEditor.update(closure)
     } else {
       try closure()
@@ -135,18 +125,16 @@ internal func runWithStateLexicalScopeProperties(activeEditor: Editor?, activeEd
   Thread.current.threadDictionary[activeEditorStateThreadDictionaryKey] = activeEditorState
   Thread.current.threadDictionary[readOnlyModeThreadDictionaryKey] = readOnlyMode
 
-  defer {
-    Thread.current.threadDictionary[activeEditorThreadDictionaryKey] = previousActiveEditor
-    Thread.current.threadDictionary[activeEditorStateThreadDictionaryKey] = previousActiveEditorState
-    Thread.current.threadDictionary[readOnlyModeThreadDictionaryKey] = previousReadOnly
-    Thread.current.threadDictionary[previousParentUpdateBlocksThreadDictionaryKey] = previousParentUpdateBlocks
-  }
-
-  if let activeEditor, readOnlyMode == false {
+  if let activeEditor {
     var newParentUpdateBlocks = previousParentUpdateBlocks
     newParentUpdateBlocks.append(activeEditor)
     Thread.current.threadDictionary[previousParentUpdateBlocksThreadDictionaryKey] = newParentUpdateBlocks
   }
 
   try closure()
+
+  Thread.current.threadDictionary[activeEditorThreadDictionaryKey] = previousActiveEditor
+  Thread.current.threadDictionary[activeEditorStateThreadDictionaryKey] = previousActiveEditorState
+  Thread.current.threadDictionary[readOnlyModeThreadDictionaryKey] = previousReadOnly
+  Thread.current.threadDictionary[previousParentUpdateBlocksThreadDictionaryKey] = previousParentUpdateBlocks
 }

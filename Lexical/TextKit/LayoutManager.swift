@@ -7,7 +7,7 @@
 
 import UIKit
 
-public class LayoutManager: NSLayoutManager, @unchecked Sendable {
+public class LayoutManager: NSLayoutManager {
   internal weak var editor: Editor? {
     get {
       if let textStorage = textStorage as? TextStorage {
@@ -28,6 +28,15 @@ public class LayoutManager: NSLayoutManager, @unchecked Sendable {
     get {
       return editor?.customDrawingText ?? [:]
     }
+  }
+
+  override public func setExtraLineFragmentRect(
+    _ fragmentRect: CGRect,
+    usedRect: CGRect,
+    textContainer container: NSTextContainer
+  ) {
+    // TODO: modify this based on our own metrics if needed -- @amyworrall
+    super.setExtraLineFragmentRect(fragmentRect, usedRect: usedRect, textContainer: container)
   }
 
   override public func drawBackground(forGlyphRange drawingGlyphRange: NSRange, at origin: CGPoint) {

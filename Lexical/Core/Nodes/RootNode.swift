@@ -17,6 +17,10 @@ public class RootNode: ElementNode {
     try super.init(from: decoder)
   }
 
+  override public func encode(to encoder: Encoder) throws {
+    try super.encode(to: encoder)
+  }
+
   override public func clone() -> Self {
     Self()
   }
@@ -37,6 +41,10 @@ public class RootNode: ElementNode {
   // beginning of the document. The same applies to postamble.
   override public final func getPreamble() -> String {
     return ""
+  }
+
+  override public func getTextContent(includeInert: Bool = false, includeDirectionless: Bool = false) -> String {
+    return super.getTextContent(includeInert: includeInert, includeDirectionless: includeDirectionless)
   }
 
   override public final func getPostamble() -> String {

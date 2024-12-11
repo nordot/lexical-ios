@@ -151,11 +151,7 @@ struct Listeners {
   var errors: [UUID: ErrorListener] = [:]
 }
 
-public struct CommandListenerWithMetadata {
-  let listener: CommandListener
-  let shouldWrapInUpdateBlock: Bool
-}
-public typealias Commands = [CommandType: [CommandPriority: [UUID: CommandListenerWithMetadata]]]
+public typealias Commands = [CommandType: [CommandPriority: [UUID: CommandListener]]]
 
 // enum is used in setting theme
 public enum TextTransform: String {

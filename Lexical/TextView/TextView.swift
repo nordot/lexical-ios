@@ -7,7 +7,6 @@
 
 import MobileCoreServices
 import UIKit
-import UniformTypeIdentifiers
 
 protocol LexicalTextViewDelegate: NSObjectProtocol {
   func textViewDidBeginEditing(textView: TextView)
@@ -147,16 +146,11 @@ protocol LexicalTextViewDelegate: NSObjectProtocol {
         return true
       } else if !(pasteboard.data(forPasteboardType: LexicalConstants.pasteboardIdentifier)?.isEmpty ?? true) {
         return true
-      } else if #available(iOS 14.0, *) {
-        if !(pasteboard.data(forPasteboardType: (UTType.utf8PlainText.identifier))?.isEmpty ?? true) {
-          return true
-        }
+      } else if !(pasteboard.data(forPasteboardType: (kUTTypeUTF8PlainText as String))?.isEmpty ?? true) {
+        return true
       } else {
-        if !(pasteboard.data(forPasteboardType: (kUTTypeUTF8PlainText as String))?.isEmpty ?? true) {
-          return true
-        }
+        return super.canPerformAction(action, withSender: sender)
       }
-      return super.canPerformAction(action, withSender: sender)
     } else {
       return super.canPerformAction(action, withSender: sender)
     }

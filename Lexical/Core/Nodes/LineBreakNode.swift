@@ -22,6 +22,10 @@ public class LineBreakNode: Node {
     .linebreak
   }
 
+  override public func encode(to encoder: Encoder) throws {
+    try super.encode(to: encoder)
+  }
+
   override public func clone() -> Self {
     Self(key)
   }

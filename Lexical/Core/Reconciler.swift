@@ -168,9 +168,14 @@ internal enum Reconciler {
       if editor.decoratorCache[key] == nil {
         editor.decoratorCache[key] = DecoratorCacheItem.needsCreation
       }
-      guard let rangeCacheItem = reconcilerState.nextRangeCache[key] else { return }
-      textStorage.decoratorPositionCache[key] = rangeCacheItem.location
     }
+
+    for key in textStorage.decoratorPositionCache.keys {
+      if let rangeCacheItem = reconcilerState.nextRangeCache[key] {
+        textStorage.decoratorPositionCache[key] = rangeCacheItem.location
+      }
+    }
+
     decoratorsToDecorate.forEach { key in
       if let cacheItem = editor.decoratorCache[key], let view = cacheItem.view {
         editor.decoratorCache[key] = DecoratorCacheItem.needsDecorating(view)

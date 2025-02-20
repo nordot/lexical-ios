@@ -541,6 +541,7 @@ public class RangeSelection: BaseSelection {
     let anchorOffset = anchor.offset
     let anchorNode = try anchor.getNode()
     var target = anchorNode
+    var isBeginning = false
 
     if anchor.type == .element {
       if let element = try anchor.getNode() as? ElementNode {
@@ -566,7 +567,9 @@ public class RangeSelection: BaseSelection {
         } else {
           target = try anchorNode.getParentOrThrow()
         }
-
+        if nodes.count == 1 {
+            isBeginning = true
+        }
         siblings.append(anchorNode)
       } else if anchorOffset == textContent.lengthAsNSString() {
         target = anchorNode
@@ -617,7 +620,13 @@ public class RangeSelection: BaseSelection {
 
             if let target = target as? ElementNode {
               for child in children {
-                try target.append([child])
+                if isBeginning {
+                  if let firstChild = target.getFirstChild() as? TextNode {
+                    try firstChild.insertBefore(nodeToInsert: child)
+                  }
+                } else {
+                    try target.append([child])
+                }
               }
             } else {
               for child in children.reversed() {
@@ -711,8 +720,12 @@ public class RangeSelection: BaseSelection {
           let prevParent = try sibling.getParentOrThrow()
 
           if let unwrappedTarget = target as? ElementNode, !isElementNode(node: sibling) {
-            try unwrappedTarget.append([sibling])
-            target = sibling
+              if nodes.count > 1 {
+                  try unwrappedTarget.append([sibling])
+                  target = sibling
+              } else {
+                  try unwrappedTarget.getLastChild()?.selectPrevious(anchorOffset: nil, focusOffset: nil)
+              }
           } else {
             if let elementSibling = sibling as? ElementNode, !elementSibling.canInsertAfter(node: target) {
               let prevParentClone = prevParent.clone()

@@ -195,6 +195,10 @@ public extension LexicalViewDelegate {
   func updateNativeSelection(from selection: BaseSelection) throws {
     guard let selection = selection as? RangeSelection else {
       // we don't have a range selection.
+      let selectedNodes = try selection.getNodes()
+      if selectedNodes.count == 1, let decorator = selectedNodes.first as? DecoratorNode {
+        return
+      }
       _ = responderForNodeSelection.becomeFirstResponder()
       return
     }

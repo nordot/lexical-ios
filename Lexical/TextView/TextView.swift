@@ -103,6 +103,18 @@ protocol LexicalTextViewDelegate: NSObjectProtocol {
         }
     }
 
+    override public func caretRect(for position: UITextPosition) -> CGRect {
+        var rect = super.caretRect(for: position)
+        guard let font = self.font else { return rect }
+
+        let targetHeight = font.lineHeight
+
+        rect.origin.y += (rect.height - targetHeight) / 2
+        rect.size.height = targetHeight
+
+        return rect
+    }
+
     override public var inputDelegate: UITextInputDelegate? {
         get {
             if useInputDelegateProxy {
@@ -171,33 +183,37 @@ protocol LexicalTextViewDelegate: NSObjectProtocol {
 
         let nsText = text as NSString
         let cursorPosition = offset(from: beginningOfDocument, to: selectedTextRange.start)
-        let firstLineRange = nsText.lineRange(for: NSMakeRange(0, 0))
+
+        // Get the range of the first line (title line)
+        let firstLineRange = nsText.lineRange(for: NSRange(location: 0, length: 0))
+
+        // Get the range of the last line (to exclude it)
+        let lastLineRange = nsText.lineRange(for: NSRange(location: nsText.length - 1, length: 0))
+
+        // Start of body (line 2)
+        let secondLineStart = NSMaxRange(firstLineRange)
+        let secondLastLineEnd = lastLineRange.location - 1
+
+        var bodyRange = NSRange(location: secondLineStart, length: max(secondLastLineEnd - secondLineStart + 1, 0))
+
+        // Remove trailing newline if exists
+        if secondLastLineEnd >= 0, nsText.character(at: secondLastLineEnd) == 10 {
+            bodyRange.length -= 1
+        }
 
         DispatchQueue.main.async {
             self.selectedTextRange = nil
 
-            if cursorPosition < firstLineRange.length {
+            if cursorPosition < firstLineRange.upperBound {
+                // Select title
                 var length = firstLineRange.length
                 if length > 0, nsText.character(at: firstLineRange.location + length - 1) == 10 {
                     length -= 1
                 }
-                let range = NSRange(location: firstLineRange.location, length: length)
-                self.selectedRange = range
+                self.selectedRange = NSRange(location: firstLineRange.location, length: length)
             } else {
-                let secondLineStart = NSMaxRange(firstLineRange)
-                let lastLineRange = nsText.lineRange(for: NSMakeRange(nsText.length - 1, 0))
-
-                if secondLineStart < lastLineRange.location {
-                    var bodyLength = lastLineRange.location - secondLineStart
-
-                    let secondLastLineEnd = lastLineRange.location - 1
-                    if secondLastLineEnd >= 0, nsText.character(at: secondLastLineEnd) == 10 {
-                        bodyLength -= 1
-                    }
-
-                    let bodyRange = NSRange(location: secondLineStart, length: bodyLength)
-                    self.selectedRange = bodyRange
-                }
+                // Select body (excluding last line)
+                self.selectedRange = bodyRange
             }
         }
     }
@@ -385,7 +401,7 @@ protocol LexicalTextViewDelegate: NSObjectProtocol {
         placeholderLabel.font = font
         titleLabel.text = "Title"
         titleLabel.textColor = textColor
-        titleLabel.font = font
+        titleLabel.font = .systemFont(ofSize: 24)
         self.font = font
 
         showPlaceholderText()
@@ -475,80 +491,80 @@ protocol LexicalTextViewDelegate: NSObjectProtocol {
 }
 
 private class TextViewDelegate: NSObject, UITextViewDelegate {
-    // Flag to avoid recursive adjustments of selection
-    private var isAdjustingSelection = false
-    // Store the last valid selection range so we can revert if needed
-    private var previousValidSelection: UITextRange?
-
     public func textViewDidChangeSelection(_ textView: UITextView) {
-        // Ensure there's a current selection range
-        guard let currentRange = textView.selectedTextRange else { return }
-        let nsText = textView.text as NSString
+        // Ensure the UITextView is our custom TextView subclass
+        guard let textView = textView as? TextView else { return }
+        guard let range = textView.selectedTextRange else { return }
+        guard let nsText = textView.text as NSString? else { return }
 
-        // Determine the offset (position) of the start of the selection
+        // Convert UITextRange to NSRange
+        let selectionStart = textView.offset(from: textView.beginningOfDocument, to: range.start)
+        let selectionEnd = textView.offset(from: textView.beginningOfDocument, to: range.end)
+
+        // Get range of the first line (title line)
         let firstLineRange = nsText.lineRange(for: NSRange(location: 0, length: 0))
-        // Determine the offset (position) of the end of the selection
-        let lastLineRange = nsText.lineRange(for: NSRange(location: nsText.length - 1, length: 0))
 
-        // Get the range for the first line and the last line
-        let selectionStart = textView.offset(from: textView.beginningOfDocument, to: currentRange.start)
-        let selectionEnd = textView.offset(from: textView.beginningOfDocument, to: currentRange.end)
+        // Get range of the last line (used to block access to it)
+        let lastLineRange = nsText.lineRange(for: NSRange(location: max(nsText.length - 1, 0), length: 0))
 
-        // Prevent recursive calls when updating the selection
-        if isAdjustingSelection { return }
-        isAdjustingSelection = true
-        defer { isAdjustingSelection = false }
+        // The start of body (second line)
+        let secondLineStart = firstLineRange.upperBound
 
-        // If selection starts at or after the beginning of the last line,
-        // revert the selection to the previous valid selection or adjust it to just before the last line.
-        if selectionStart >= lastLineRange.location {
-            if let previous = previousValidSelection {
-                textView.selectedTextRange = previous
-            } else if let validPos = textView.position(from: textView.beginningOfDocument, offset: lastLineRange.location - 1) {
-                textView.selectedTextRange = textView.textRange(from: validPos, to: validPos)
-            }
-            return
-        }
+        // The position before last line starts (to exclude it)
+        let beforeLastLineEnd = lastLineRange.location
 
-        // Determine allowed selection boundaries based on where the selection starts:
-        // If selection starts in the first line, allow selection only within the first line.
-        // Otherwise, allow selection only within the body range: from after the first line to just before the last line.
-        var allowedStart: Int
-        var allowedEnd: Int
+        // Initialize adjusted selection range
+        var validStart = selectionStart
+        var validEnd = selectionEnd
+
         if selectionStart < firstLineRange.length {
-            allowedStart = 0
-            allowedEnd = firstLineRange.length - 1
+            // If selection starts in the first line, limit it to only the first line
+            validStart = max(validStart, firstLineRange.location)
+            validEnd = min(validEnd, firstLineRange.upperBound - 1) // exclude line break
         } else {
-            allowedStart = firstLineRange.length
-            allowedEnd = lastLineRange.location - 1
+            // If selection starts in the body, restrict to second line up to before last line
+            validStart = max(validStart, secondLineStart)
+            validEnd = min(validEnd, beforeLastLineEnd - 1) // exclude line break before last line
         }
 
-        // Adjust the new selection start and end if they fall outside allowed boundaries.
-        let newStart = max(selectionStart, allowedStart)
-        let newEnd = min(selectionEnd, allowedEnd)
-
-        // Update the selection if it has been adjusted
-        if newStart != selectionStart || newEnd != selectionEnd {
-            if let newStartPos = textView.position(from: textView.beginningOfDocument, offset: newStart),
-               let newEndPos = textView.position(from: textView.beginningOfDocument, offset: newEnd),
-               let newRange = textView.textRange(from: newStartPos, to: newEndPos)
-            {
-                textView.selectedTextRange = newRange
-            }
-        } else {
-            // If the current selection is valid, store it as the last valid selection.
-            previousValidSelection = currentRange
+        // Apply the corrected range if any change is detected
+        if validStart != selectionStart || validEnd != selectionEnd,
+           let newStart = textView.position(from: textView.beginningOfDocument, offset: validStart),
+           let newEnd = textView.position(from: textView.beginningOfDocument, offset: validEnd),
+           let newRange = textView.textRange(from: newStart, to: newEnd)
+        {
+            textView.selectedTextRange = newRange
         }
 
-        // Continue with any other selection change handling required by the editor.
-        guard let tv = textView as? TextView else { return }
-        if tv.isUpdatingNativeSelection { return }
-        if let interception = tv.interceptNextSelectionChangeAndReplaceWithRange {
-            tv.interceptNextSelectionChangeAndReplaceWithRange = nil
-            tv.selectedRange = interception
+        // Skip native update if we're in the middle of programmatic changes
+        if textView.isUpdatingNativeSelection { return }
+
+        // Handle intercepted selection range replacement if needed
+        if let interception = textView.interceptNextSelectionChangeAndReplaceWithRange {
+            textView.interceptNextSelectionChangeAndReplaceWithRange = nil
+            textView.selectedRange = interception
             return
         }
-        onSelectionChange(editor: tv.editor)
+
+        // Trigger lexical editor selection sync
+        onSelectionChange(editor: textView.editor)
+    }
+
+    private func isCursorAtLastLine(textView: UITextView, cursorPosition: Int) -> Bool {
+        guard let text = textView.text, !text.isEmpty else { return false }
+        let layoutManager = textView.layoutManager
+        let textContainer = textView.textContainer
+        let glyphIndex = layoutManager.characterIndex(for: textView.caretRect(for: textView.selectedTextRange!.start).origin,
+                                                      in: textContainer,
+                                                      fractionOfDistanceBetweenInsertionPoints: nil)
+        var lineRange = NSRange()
+        layoutManager.lineFragmentRect(forGlyphAt: glyphIndex, effectiveRange: &lineRange)
+
+        let lastGlyphIndex = layoutManager.numberOfGlyphs - 1
+        var lastLineRange = NSRange()
+        layoutManager.lineFragmentRect(forGlyphAt: lastGlyphIndex, effectiveRange: &lastLineRange)
+
+        return lineRange.location == lastLineRange.location
     }
 
     public func textView(_ textView: UITextView, shouldChangeTextIn range: NSRange, replacementText text: String) -> Bool {

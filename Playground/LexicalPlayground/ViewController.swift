@@ -40,18 +40,14 @@ class ViewController: UIViewController, UIToolbarDelegate {
             .fontSize: 16,
             .lineHeight: 24
         ]
-        theme.heading = [
+        theme.title = [
             .fontSize: 24,
-            .lineHeight: 24
+            .lineHeight: 24,
+            .paragraphSpacingBefore: 8,
+            .paragraphSpacing: 8
         ]
         theme.link = [
             .foregroundColor: UIColor.systemBlue
-        ]
-        theme.code = [
-            .paddingHead: 8,
-            .paddingTail: -8,
-            .fontSize: 16,
-            .lineHeight: 24
         ]
         theme.quote = [
             .paddingHead: 8,
@@ -59,7 +55,7 @@ class ViewController: UIViewController, UIToolbarDelegate {
             .fontSize: 16,
             .lineHeight: 24
         ]
-//        theme.setBlockLevelAttributes(.code, value: BlockLevelAttributes(marginTop: 8, marginBottom: 8, paddingTop: 6, paddingBottom: 4))
+        theme.setBlockLevelAttributes(.code, value: BlockLevelAttributes(marginTop: 0, marginBottom: 0, paddingTop: 8, paddingBottom: 8))
 
 
         let editorConfig = EditorConfig(theme: theme, plugins: [toolbarPlugin, listPlugin, hierarchyPlugin, imagePlugin, linkPlugin, editorHistoryPlugin])

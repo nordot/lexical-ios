@@ -20,20 +20,63 @@ internal func isRootTextContentEmpty(isEditorComposing: Bool, trim: Bool = true)
   return text.isEmpty
 }
 
+internal func isTitleTextContentEmpty(isEditorComposing: Bool, trim: Bool = true) -> Bool {
+  if isEditorComposing {
+    return false
+  }
+
+  var text = titleTextContent()
+  if trim {
+    text = text.trimmingCharacters(in: .whitespacesAndNewlines)
+  }
+
+  return text.isEmpty
+}
+
+internal func isBodyTextContentEmpty(isEditorComposing: Bool, trim: Bool = true) -> Bool {
+  if isEditorComposing {
+    return false
+  }
+
+  var text = bodyTextContent()
+  if trim {
+    text = text.trimmingCharacters(in: .whitespacesAndNewlines)
+  }
+
+  return text.isEmpty
+}
+
 internal func rootTextContent() -> String {
   guard let root = getRoot() else { return "" }
 
   return root.getTextContent()
 }
 
-internal func canShowPlaceholder(isComposing: Bool) -> Bool {
-  if !isRootTextContentEmpty(isEditorComposing: isComposing, trim: false) {
+internal func titleTextContent() -> String {
+  guard let root = getRoot() else { return "" }
+
+  return root.getTitleTextContent()
+}
+
+internal func bodyTextContent() -> String {
+  guard let root = getRoot() else { return "" }
+
+  return root.getBodyTextContent()
+}
+
+internal func canShowTitlePlaceholder(isComposing: Bool) -> Bool {
+  return isTitleTextContentEmpty(isEditorComposing: isComposing)
+}
+
+
+internal func canShowBodyPlaceholder(isComposing: Bool) -> Bool {
+  if !isBodyTextContentEmpty(isEditorComposing: isComposing) {
     return false
   }
 
   guard let root = getRoot() else { return false }
 
-  let children = root.getChildren()
+  let children = root.getBodyChildren()
   if children.count > 1 {
     return false
   }

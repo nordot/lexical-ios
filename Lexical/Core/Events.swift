@@ -62,8 +62,35 @@ internal func onRemoveTextFromUITextView(editor: Editor) throws {
 }
 
 internal func onDeleteBackwardsFromUITextView(editor: Editor) throws {
-  guard let editor = getActiveEditor(), let selection = try getSelection() else {
+  guard let editor = getActiveEditor(), let selection = try getSelection() as? RangeSelection else {
     throw LexicalError.invariantViolation("No editor or selection")
+  }
+
+  let selectedNodes = try selection.getNodes()
+  let anchor = selection.anchor
+  let focus = selection.focus
+  let isBackward = try !selection.isBackward()
+  let startOffset = isBackward ? anchor.offset : focus.offset
+  let endOffset = isBackward ? focus.offset : anchor.offset
+  let firstNode = selectedNodes.first
+  let lastNode = selectedNodes.last
+
+  // Check if the selection is collapsed (i.e., startOffset equals endOffset)
+  // and confined to a single node (firstNode equals lastNode).
+  if startOffset == endOffset, firstNode == lastNode {
+    // Attempt to retrieve the root node.
+    guard let root = getRoot() else { return }
+    // Retrieve the body children nodes from the root.
+    let bodyNodes = root.getBodyChildren()
+    // Retrieve the title node from the root.
+    let titleNode = root.getTitleNode()
+
+    // Check if the first node is the first body node or the title node,
+    // and if the cursor is at the beginning (startOffset == 0).
+    // If these conditions are met, return early to prevent deletion.
+    if (firstNode == bodyNodes.first && startOffset == 0) || (titleNode == firstNode && startOffset == 0) {
+        return
+    }
   }
 
   try selection.deleteCharacter(isBackwards: true)

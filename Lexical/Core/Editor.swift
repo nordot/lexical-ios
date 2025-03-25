@@ -392,11 +392,15 @@ public class Editor: NSObject {
       try? updateWithCustomBehaviour(mode: UpdateBehaviourModificationMode(suppressReconcilingSelection: true, suppressSanityCheck: true, markedTextOperation: nil, skipTransforms: true, allowUpdateWithoutTextStorage: true)) {
         guard let root = getRoot() else { return }
         if root.getFirstChild() == nil {
+          let heading = createHeadingNode(headingTag: .h1)
           let paragraph = createParagraphNode()
-          try root.append([paragraph])
+          let textNode = createTextNode(text: "\u{200B}")
+          try paragraph.append([textNode])
+
+          try root.append([heading, createParagraphNode(), paragraph])
           let selection = try getSelection()
           if selection != nil {
-            try paragraph.select(anchorOffset: nil, focusOffset: nil)
+            try heading.select(anchorOffset: nil, focusOffset: nil)
             if let selection = selection as? RangeSelection {
               selection.clearFormat()
             }

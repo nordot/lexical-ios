@@ -32,20 +32,23 @@ public class ParagraphNode: ElementNode {
     Self(key)
   }
 
-    override public func getAttributedStringAttributes(theme: Theme) -> [NSAttributedString.Key: Any] {
-        let titleNode = getRoot()?.getTitleNode()
-        if titleNode == self {
-            if let title = theme.title {
-                return title
-            }
-        } else {
-            if let paragraph = theme.paragraph {
-                return paragraph
-            }
+  override public func getAttributedStringAttributes(theme: Theme) -> [NSAttributedString.Key: Any] {
+    let isShowTitlePlaceHolder = getFlagShowTitlePlaceHolder() ?? false
+    if isShowTitlePlaceHolder {
+      let titleNode = getRoot()?.getTitleNode()
+      if titleNode == self {
+        if let title = theme.title {
+          return title
         }
-
-        return [:]
+      }
     }
+
+    if let paragraph = theme.paragraph {
+      return paragraph
+    }
+
+    return [:]
+  }
 
   override open func insertNewAfter(selection: RangeSelection?) throws -> ParagraphNode? {
     let newElement = createParagraphNode()

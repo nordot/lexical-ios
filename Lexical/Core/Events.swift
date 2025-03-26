@@ -89,6 +89,9 @@ internal func onDeleteBackwardsFromUITextView(editor: Editor) throws {
     // and if the cursor is at the beginning (startOffset == 0).
     // If these conditions are met, return early to prevent deletion.
     if (firstNode == bodyNodes.first && startOffset == 0) || (titleNode == firstNode && startOffset == 0) {
+        if let firstNode, !(firstNode is ParagraphNode) {
+            setBlocksType(selection: selection, createElement: { createParagraphNode() } )
+        }
         return
     }
   }

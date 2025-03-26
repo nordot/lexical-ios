@@ -15,10 +15,12 @@ import UIKit
 @objc public class EditorConfig: NSObject {
   let theme: Theme
   let plugins: [Plugin]
+  let isShowTitlePlaceHolder: Bool
 
-  @objc public init(theme: Theme, plugins: [Plugin]) {
+  @objc public init(theme: Theme, plugins: [Plugin], isShowTitlePlaceHolder: Bool) {
     self.theme = theme
     self.plugins = plugins
+    self.isShowTitlePlaceHolder = isShowTitlePlaceHolder
   }
 }
 
@@ -52,6 +54,7 @@ public class Editor: NSObject {
   private var editorState: EditorState
   private var pendingEditorState: EditorState?
   private var theme: Theme
+  private var isShowTitlePlaceHolder: Bool
 
   internal var textStorage: TextStorage? {
     frontend?.textStorage
@@ -63,7 +66,9 @@ public class Editor: NSObject {
         if let textStorage {
           textStorage.mode = .controllerMode
           textStorage.replaceCharacters(
-            in: NSRange(location: 0, length: textStorage.string.lengthAsNSString()), with: "")
+            in: NSRange(location: 0, length: textStorage.string.lengthAsNSString()),
+            with: ""
+          )
           textStorage.mode = .none
         }
         try? update {}
@@ -133,6 +138,7 @@ public class Editor: NSObject {
     rangeCache[rootNodeKey] = RangeCacheItem()
     theme = editorConfig.theme
     plugins = editorConfig.plugins
+    isShowTitlePlaceHolder = editorConfig.isShowTitlePlaceHolder
     super.init()
     initializePlugins(plugins)
 
@@ -157,7 +163,7 @@ public class Editor: NSObject {
 
   /// This method is only used for testing purposes
   override convenience init() {
-    self.init(editorConfig: EditorConfig(theme: Theme(), plugins: []))
+    self.init(editorConfig: EditorConfig(theme: Theme(), plugins: [], isShowTitlePlaceHolder: true))
   }
 
   /**
@@ -221,12 +227,9 @@ public class Editor: NSObject {
     editorState
   }
 
-  //  /// Returns the TextView attached to this Editor.
-  //  /// - Returns: the TextView
-  //  func getTextView() -> TextView? {
-  //    textView
-  //  }
-
+  @objc public func getFlagShowTitlePlaceHolder() -> Bool {
+    isShowTitlePlaceHolder
+  }
   // MARK: - Registration
 
   public typealias RemovalHandler = () -> Void
@@ -417,12 +420,20 @@ public class Editor: NSObject {
       ) {
         guard let root = getRoot() else { return }
         if root.getFirstChild() == nil {
+          var nodes: [Node] = []
           let firstLine = createParagraphNode()
+          nodes.append(firstLine)
+
+          if isShowTitlePlaceHolder {
+              nodes.append(createParagraphNode())
+          }
+
           let paragraph = createParagraphNode()
           let textNode = createTextNode(text: "\u{200B}")
           try paragraph.append([textNode])
+          nodes.append(paragraph)
 
-          try root.append([firstLine, createParagraphNode(), paragraph])
+          try root.append(nodes)
           let selection = try getSelection()
           if selection != nil {
             try firstLine.select(anchorOffset: nil, focusOffset: nil)

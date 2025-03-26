@@ -48,6 +48,10 @@ public class RootNode: ElementNode {
   }
 
   public func getTitleNode<T: Node>() -> T? {
+    let isShowTitlePlaceHolder = getFlagShowTitlePlaceHolder() ?? false
+    if !isShowTitlePlaceHolder {
+      return nil
+    }
     let children = getLatest().children
 
     if children.count == 0 {

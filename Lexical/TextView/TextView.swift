@@ -22,6 +22,7 @@ protocol LexicalTextViewDelegate: NSObjectProtocol {
     let pasteboard = UIPasteboard.general
     let pasteboardIdentifier = "x-lexical-nodes"
     var isUpdatingNativeSelection = false
+    var isShowTitlePlaceholder = false
     var layoutManagerDelegate: LayoutManagerDelegate
 
     // This is to work around a UIKit issue where, in situations like autocomplete, UIKit changes our selection via
@@ -58,7 +59,8 @@ protocol LexicalTextViewDelegate: NSObjectProtocol {
 
         editor = Editor(
             featureFlags: FeatureFlags(reconcilerSanityCheck: reconcilerSanityCheck),
-            editorConfig: editorConfig)
+            editorConfig: editorConfig
+        )
         textStorage.editor = editor
         placeholderLabel = UILabel(frame: .zero)
         titleLabel = UILabel(frame: .zero)
@@ -84,7 +86,14 @@ protocol LexicalTextViewDelegate: NSObjectProtocol {
 
     /// This init method is used for unit tests
     convenience init() {
-        self.init(editorConfig: EditorConfig(theme: Theme(), plugins: []), featureFlags: FeatureFlags())
+        self.init(
+            editorConfig: EditorConfig(
+                theme: Theme(),
+                plugins: [],
+                isShowTitlePlaceHolder: true
+            ),
+            featureFlags: FeatureFlags()
+        )
     }
 
     @available(*, unavailable)
@@ -94,11 +103,20 @@ protocol LexicalTextViewDelegate: NSObjectProtocol {
 
     override public func layoutSubviews() {
         super.layoutSubviews()
-        titleLabel.frame.origin = CGPoint(x: textContainer.lineFragmentPadding * 1.5 + textContainerInset.left, y: textContainerInset.top)
-        titleLabel.sizeToFit()
 
-        if let height = firstLineHeight() {
-            placeholderLabel.frame.origin = CGPoint(x: textContainer.lineFragmentPadding * 1.5 + textContainerInset.left, y: height + textContainerInset.top)
+        if isShowTitlePlaceholder {
+            titleLabel.frame.origin = CGPoint(
+                x: textContainer.lineFragmentPadding * 1.5 + textContainerInset.left,
+                y: textContainerInset.top
+            )
+            titleLabel.sizeToFit()
+
+            if let height = firstLineHeight() {
+                placeholderLabel.frame.origin = CGPoint(x: textContainer.lineFragmentPadding * 1.5 + textContainerInset.left, y: height + textContainerInset.top)
+                placeholderLabel.sizeToFit()
+            }
+        } else {
+            placeholderLabel.frame.origin = CGPoint(x: textContainer.lineFragmentPadding * 1.5 + textContainerInset.left, y: textContainerInset.top)
             placeholderLabel.sizeToFit()
         }
     }
@@ -180,7 +198,6 @@ protocol LexicalTextViewDelegate: NSObjectProtocol {
 
     override public func selectAll(_ sender: Any?) {
         guard let text = text, let selectedTextRange = selectedTextRange else { return }
-
         let nsText = text as NSString
         let cursorPosition = offset(from: beginningOfDocument, to: selectedTextRange.start)
 
@@ -191,8 +208,11 @@ protocol LexicalTextViewDelegate: NSObjectProtocol {
         let lastLineRange = nsText.lineRange(for: NSRange(location: nsText.length - 1, length: 0))
 
         // Start of body (line 2)
-        let secondLineStart = NSMaxRange(firstLineRange)
+        var secondLineStart = NSMaxRange(firstLineRange)
         let secondLastLineEnd = lastLineRange.location - 1
+        if !isShowTitlePlaceholder {
+            secondLineStart = firstLineRange.location
+        }
 
         var bodyRange = NSRange(location: secondLineStart, length: max(secondLastLineEnd - secondLineStart + 1, 0))
 
@@ -204,7 +224,7 @@ protocol LexicalTextViewDelegate: NSObjectProtocol {
         DispatchQueue.main.async {
             self.selectedTextRange = nil
 
-            if cursorPosition < firstLineRange.upperBound {
+            if cursorPosition < firstLineRange.upperBound && self.isShowTitlePlaceholder {
                 // Select title
                 var length = firstLineRange.length
                 if length > 0, nsText.character(at: firstLineRange.location + length - 1) == 10 {
@@ -399,12 +419,14 @@ protocol LexicalTextViewDelegate: NSObjectProtocol {
         placeholderLabel.text = text
         placeholderLabel.textColor = textColor
         placeholderLabel.font = font
-        titleLabel.text = "Title"
-        titleLabel.textColor = textColor
-        titleLabel.font = .systemFont(ofSize: 24)
         self.font = font
+    }
 
-        showPlaceholderText()
+    func setTitlePlaceholderText(_ text: String, textColor: UIColor, font: UIFont) {
+        titleLabel.text = text
+        titleLabel.textColor = textColor
+        titleLabel.font = font
+        self.font = font
     }
 
     func showPlaceholderText() {
@@ -517,14 +539,19 @@ private class TextViewDelegate: NSObject, UITextViewDelegate {
         var validStart = selectionStart
         var validEnd = selectionEnd
 
-        if selectionStart < firstLineRange.length {
+        if selectionStart < firstLineRange.length && textView.isShowTitlePlaceholder {
             // If selection starts in the first line, limit it to only the first line
             validStart = max(validStart, firstLineRange.location)
             validEnd = min(validEnd, firstLineRange.upperBound - 1) // exclude line break
         } else {
-            // If selection starts in the body, restrict to second line up to before last line
-            validStart = max(validStart, secondLineStart)
-            validEnd = min(validEnd, beforeLastLineEnd - 1) // exclude line break before last line
+            if !textView.isShowTitlePlaceholder {
+                validStart = max(validStart, firstLineRange.location)
+                validEnd = min(validEnd, beforeLastLineEnd - 1) // exclude line break before last line
+            } else {
+                // If selection starts in the body, restrict to second line up to before last line
+                validStart = max(validStart, secondLineStart)
+                validEnd = min(validEnd, beforeLastLineEnd - 1) // exclude line break before last line
+            }
         }
 
         // Apply the corrected range if any change is detected

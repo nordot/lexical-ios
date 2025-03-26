@@ -29,10 +29,8 @@ class ViewController: UIViewController, UIToolbarDelegate {
 
         let hierarchyPlugin = NodeHierarchyViewPlugin()
         let hierarchyView = hierarchyPlugin.hierarchyView
-
         let listPlugin = ListPlugin()
         let imagePlugin = InlineImagePlugin()
-
         let linkPlugin = LinkPlugin()
 
         let theme = Theme()
@@ -55,15 +53,42 @@ class ViewController: UIViewController, UIToolbarDelegate {
             .fontSize: 16,
             .lineHeight: 24
         ]
-        theme.setBlockLevelAttributes(.code, value: BlockLevelAttributes(marginTop: 0, marginBottom: 0, paddingTop: 8, paddingBottom: 8))
+        theme.setBlockLevelAttributes(
+            .code,
+            value: BlockLevelAttributes(
+                marginTop: 0,
+                marginBottom: 0,
+                paddingTop: 8,
+                paddingBottom: 8
+            )
+        )
 
-
-        let editorConfig = EditorConfig(theme: theme, plugins: [toolbarPlugin, listPlugin, hierarchyPlugin, imagePlugin, linkPlugin, editorHistoryPlugin])
-        let lexicalView = LexicalView(editorConfig: editorConfig, featureFlags: FeatureFlags(), placeholderText: LexicalPlaceholderText(
-            text: "Write",
-            font: .systemFont(ofSize: 16),
-            color: UIColor.placeholderText
-        ))
+        let editorConfig = EditorConfig(
+            theme: theme,
+            plugins: [
+                toolbarPlugin,
+                listPlugin,
+                hierarchyPlugin,
+                imagePlugin,
+                linkPlugin,
+                editorHistoryPlugin
+            ],
+            isShowTitlePlaceHolder: true
+        )
+        let lexicalView = LexicalView(
+            editorConfig: editorConfig,
+            featureFlags: FeatureFlags(),
+            placeholderText: LexicalPlaceholderText(
+                text: "Write",
+                font: .systemFont(ofSize: 16),
+                color: UIColor.placeholderText
+            ),
+            titlePlaceholderText: LexicalPlaceholderText(
+                text: "Title",
+                font: .systemFont(ofSize: 24),
+                color: UIColor.placeholderText
+            )
+        )
 
         linkPlugin.lexicalView = lexicalView
         toolbarPlugin.lexicalView = lexicalView

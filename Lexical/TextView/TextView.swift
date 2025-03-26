@@ -196,10 +196,61 @@ protocol LexicalTextViewDelegate: NSObjectProtocol {
         }
     }
 
+    func codeBlockRange(at location: Int) -> NSRange? {
+        let fullRange = NSRange(location: 0, length: self.attributedText.length)
+        var effectiveRange = NSRange()
+        let attr = attributedText.attribute(.codeBlockCustomDrawing, at: location, longestEffectiveRange: &effectiveRange, in: fullRange)
+
+        if let _ = attr as? Lexical.CodeBlockCustomDrawingAttributes {
+            let endLocation = NSMaxRange(effectiveRange)
+            if endLocation <= attributedText.length,
+               attributedText.attributedSubstring(from: NSRange(location: endLocation - 1, length: 1)).string == "\n" {
+                effectiveRange.length -= 1
+            }
+
+            return effectiveRange
+        }
+
+        return nil
+    }
+
+    func quoteBlockRange(at location: Int) -> NSRange? {
+        let fullRange = NSRange(location: 0, length: self.attributedText.length)
+        var effectiveRange = NSRange()
+        let attr = attributedText.attribute(
+            .quoteCustomDrawing,
+            at: location,
+            longestEffectiveRange: &effectiveRange,
+            in: fullRange
+        )
+
+        if let _ = attr as? Lexical.QuoteCustomDrawingAttributes {
+            let endLocation = NSMaxRange(effectiveRange)
+            if endLocation <= attributedText.length,
+               attributedText.attributedSubstring(from: NSRange(location: endLocation - 1, length: 1)).string == "\n" {
+                effectiveRange.length -= 1
+            }
+
+            return effectiveRange
+        }
+
+        return nil
+    }
+
     override public func selectAll(_ sender: Any?) {
         guard let text = text, let selectedTextRange = selectedTextRange else { return }
         let nsText = text as NSString
         let cursorPosition = offset(from: beginningOfDocument, to: selectedTextRange.start)
+
+        if let codeRange = codeBlockRange(at: selectedRange.location) {
+            self.selectedRange = codeRange
+            return
+        }
+
+        if let quoteRange = quoteBlockRange(at: selectedRange.location) {
+            self.selectedRange = quoteRange
+            return
+        }
 
         // Get the range of the first line (title line)
         let firstLineRange = nsText.lineRange(for: NSRange(location: 0, length: 0))

@@ -116,9 +116,9 @@ public class EditorHistory {
 
     externalHistoryState.current = historyStateEntry
     do {
-      if let editor = historyStateEntry.editor,
-         let undoSelection = historyStateEntry.undoSelection {
-        try editor.setEditorState(historyStateEntry.editorState.clone(selection: undoSelection))
+      if let editor = historyStateEntry.editor {
+        let selection = historyStateEntry.undoSelection
+        try editor.setEditorState(historyStateEntry.editorState.clone(selection: selection))
         historyStateEntry.editor = editor
         editor.dispatchCommand(type: .updatePlaceholderVisibility)
       }

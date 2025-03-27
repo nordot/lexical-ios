@@ -91,7 +91,9 @@ open class EditorHistoryPlugin: Plugin {
 
     removeUpdateListener = editor.registerUpdateListener(listener: { [weak self] (activeEditorState, previousEditorState, dirtyNodes) in
       guard let strongSelf = self, let editorHistory = strongSelf.editorHistory else { return }
-
+      if activeEditorState == previousEditorState {
+        return
+      }
       editorHistory.applyChange(
         editorState: activeEditorState,
         prevEditorState: previousEditorState,

@@ -77,7 +77,21 @@ public class EditorState: NSObject {
     var isEqual = true
 
     rhs.nodeMap.forEach { element in
-      isEqual = isEqual && (lhs.nodeMap[element.key] == element.value)
+        guard let lhsNode = lhs.nodeMap[element.key] else {
+            isEqual = false
+            return
+        }
+
+        let rhsNode = element.value
+
+        switch (lhsNode, rhsNode) {
+        case let (leftNode as TextNode, rightNode as TextNode):
+            isEqual = isEqual && (leftNode == rightNode)
+        case let (leftNode, rightNode):
+            isEqual = isEqual && (leftNode == rightNode)
+        default:
+            isEqual = false
+        }
     }
 
     let selectionEqual: Bool

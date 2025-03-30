@@ -96,7 +96,7 @@ public class Editor: NSObject {
   // by default.
   internal var registeredNodes: [NodeType: Node.Type] = [
     .root: RootNode.self, .text: TextNode.self, .element: ElementNode.self,
-    .heading: HeadingNode.self, .paragraph: ParagraphNode.self, .quote: QuoteNode.self,
+    .heading: HeadingNode.self, .paragraph: ParagraphNode.self, .quote: QuoteNode.self, .linebreak: LineBreakNode.self
   ]
 
   internal var nodeTransforms: [NodeType: [(Int, NodeTransform)]] = [:]

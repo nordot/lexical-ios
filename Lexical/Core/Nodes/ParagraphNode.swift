@@ -54,6 +54,9 @@ public class ParagraphNode: ElementNode {
     let newElement = createParagraphNode()
     let direction = getDirection()
     do {
+      let selection = try getSelection() as? RangeSelection
+      selection?.clearFormat()
+
       try newElement.setDirection(direction: direction)
       try insertAfter(nodeToInsert: newElement)
     } catch {

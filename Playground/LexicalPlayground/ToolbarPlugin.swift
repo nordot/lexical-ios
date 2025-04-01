@@ -16,6 +16,7 @@ import UIKit
 
 public class ToolbarPlugin: Plugin {
   private var _toolbar: UIToolbar
+  public weak var lexicalView: LexicalView?
 
   weak var editor: Editor?
   weak var viewControllerForPresentation: UIViewController?
@@ -157,6 +158,7 @@ public class ToolbarPlugin: Plugin {
   private func updateToolbar() {
     if let selection = try? getSelection() as? RangeSelection {
       guard let anchorNode = try? selection.anchor.getNode() else { return }
+      lexicalView?.showPlaceholderText()
 
       var element =
         isRootNode(node: anchorNode)

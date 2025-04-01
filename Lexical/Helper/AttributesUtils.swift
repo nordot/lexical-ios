@@ -159,6 +159,11 @@ enum AttributeUtils {
       styleFound = true
     }
 
+    if let paragraphSpacing = coerceCGFloat(attributes[.paragraphSpacing]) {
+        paragraphStyle.paragraphSpacing = paragraphSpacing
+        styleFound = true
+    }
+
     return styleFound ? paragraphStyle : nil
   }
 

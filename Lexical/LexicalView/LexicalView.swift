@@ -56,25 +56,52 @@ public extension LexicalViewDelegate {
   @objc public let textView: TextView
   let responderForNodeSelection: ResponderForNodeSelection
 
-  @objc public init(editorConfig: EditorConfig, featureFlags: FeatureFlags, placeholderText: LexicalPlaceholderText? = nil) {
+  @objc public init(
+    editorConfig: EditorConfig,
+    featureFlags: FeatureFlags,
+    placeholderText: LexicalPlaceholderText? = nil,
+    titlePlaceholderText: LexicalPlaceholderText? = nil
+  ) {
     self.textView = TextView(editorConfig: editorConfig, featureFlags: featureFlags)
     self.textView.showsVerticalScrollIndicator = false
     self.textView.clipsToBounds = true
     self.textView.accessibilityTraits = .staticText
     self.placeholderText = placeholderText
+    self.titlePlaceholderText = titlePlaceholderText
 
     guard let textStorage = textView.textStorage as? TextStorage else {
       fatalError()
     }
-    self.responderForNodeSelection = ResponderForNodeSelection(editor: textView.editor, textStorage: textStorage, nextResponder: textView)
+    self.responderForNodeSelection = ResponderForNodeSelection(
+        editor: textView.editor,
+        textStorage: textStorage,
+        nextResponder: textView
+    )
 
     super.init(frame: .zero)
 
     self.textView.editor.frontend = self
-
     self.textView.lexicalDelegate = self
+
     if let placeholderText {
-      self.textView.setPlaceholderText(placeholderText.text, textColor: placeholderText.color, font: placeholderText.font)
+      self.textView.setPlaceholderText(
+        placeholderText.text,
+        textColor: placeholderText.color,
+        font: placeholderText.font
+      )
+    }
+
+    if let titlePlaceholderText {
+      self.textView.setTitlePlaceholderText(
+        titlePlaceholderText.text,
+        textColor: titlePlaceholderText.color,
+        font: titlePlaceholderText.font
+      )
+      self.textView.isShowTitlePlaceholder = true
+    }
+
+    if placeholderText != nil || titlePlaceholderText != nil {
+        self.textView.showPlaceholderText()
     }
 
     addSubview(self.textView)
@@ -112,7 +139,14 @@ public extension LexicalViewDelegate {
 
   var nativeSelection: NativeSelection {
     if responderForNodeSelection.isFirstResponder {
-      return NativeSelection(range: nil, opaqueRange: nil, affinity: .forward, markedRange: nil, markedOpaqueRange: nil, selectionIsNodeOrObject: true)
+      return NativeSelection(
+        range: nil,
+        opaqueRange: nil,
+        affinity: .forward,
+        markedRange: nil,
+        markedOpaqueRange: nil,
+        selectionIsNodeOrObject: true
+      )
     }
 
     let selectionNSRange = textView.selectedRange
@@ -127,7 +161,8 @@ public extension LexicalViewDelegate {
       if markedStart != NSNotFound && markedEnd != NSNotFound {
         markedNSRange = NSRange(
           location: markedStart,
-          length: markedEnd - markedStart)
+          length: markedEnd - markedStart
+        )
       }
     }
     return NativeSelection(range: selectionNSRange, opaqueRange: selectionOpaqueRange, affinity: selectionAffinity, markedRange: markedNSRange, markedOpaqueRange: markedOpaqueRange, selectionIsNodeOrObject: false)
@@ -263,6 +298,13 @@ public extension LexicalViewDelegate {
   /// works correctly. However setting the placeholder text later through this property will not properly proxy it through to the
   /// TextView. This is a bug and should be fixed.
   public var placeholderText: LexicalPlaceholderText?
+
+  /// Configure the title placeholder text shown by this Lexical view when there is no text.
+  ///
+  /// This needs a refactor. Currently the LexicalView supports setting the placeholder text as part of the initialiser, which
+  /// works correctly. However setting the placeholder text later through this property will not properly proxy it through to the
+  /// TextView. This is a bug and should be fixed.
+  public var titlePlaceholderText: LexicalPlaceholderText?
 
   /// Returns the current selected text range according to the underlying UITextView.
   ///

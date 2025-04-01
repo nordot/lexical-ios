@@ -33,6 +33,16 @@ public class ParagraphNode: ElementNode {
   }
 
   override public func getAttributedStringAttributes(theme: Theme) -> [NSAttributedString.Key: Any] {
+    let isShowTitlePlaceHolder = getFlagShowTitlePlaceHolder() ?? false
+    if isShowTitlePlaceHolder {
+      let titleNode = getRoot()?.getTitleNode()
+      if titleNode == self {
+        if let title = theme.title {
+          return title
+        }
+      }
+    }
+
     if let paragraph = theme.paragraph {
       return paragraph
     }
@@ -44,6 +54,9 @@ public class ParagraphNode: ElementNode {
     let newElement = createParagraphNode()
     let direction = getDirection()
     do {
+      let selection = try getSelection() as? RangeSelection
+      selection?.clearFormat()
+
       try newElement.setDirection(direction: direction)
       try insertAfter(nodeToInsert: newElement)
     } catch {

@@ -47,6 +47,79 @@ public class RootNode: ElementNode {
     return super.getTextContent(includeInert: includeInert, includeDirectionless: includeDirectionless)
   }
 
+  public func getTitleNode<T: Node>() -> T? {
+    let isShowTitlePlaceHolder = getFlagShowTitlePlaceHolder() ?? false
+    if !isShowTitlePlaceHolder {
+      return nil
+    }
+    let children = getLatest().children
+
+    if children.count == 0 {
+      return nil
+    }
+
+    guard let firstChild = children.first else { return nil }
+
+    return getNodeByKey(key: firstChild)
+  }
+
+  public func getLastHiddenNode<T: Node>() -> T? {
+    let children = getLatest().children
+
+    if children.count == 0 {
+      return nil
+    }
+
+    guard let lastChild = children.last else { return nil }
+
+    return getNodeByKey(key: lastChild)
+  }
+
+  public func getTitleTextContent(includeInert: Bool = false, includeDirectionless: Bool = false) -> String {
+      if let titleNode = getTitleNode() {
+          return titleNode.getTextContent(includeInert: includeInert, includeDirectionless: includeDirectionless)
+      } else {
+          return ""
+      }
+  }
+
+  public func getBodyTextContent(includeInert: Bool = false, includeDirectionless: Bool = false) -> String {
+    let children = getChildren()
+    let preamble = getPreamble()
+    let postamble = getPostamble()
+    let titleNode = getTitleNode()
+    let hiddenNode = getLastHiddenNode()
+
+    var textContent = ""
+
+    textContent += preamble
+
+    for child in children {
+      if titleNode == child || hiddenNode == child {
+          continue
+      }
+
+      textContent += child.getTextContent(includeInert: includeInert, includeDirectionless: includeDirectionless)
+      if child is LineBreakNode {
+        textContent += child.getPostamble()
+      }
+    }
+
+    textContent += postamble
+
+    return textContent
+  }
+
+  public func getBodyChildren() -> [Node] {
+    let titleNode = getTitleNode()
+    let hiddenNode = getLastHiddenNode()
+
+    return getLatest().children.compactMap { nodeKey in
+        let node = getNodeByKey(key: nodeKey)
+        return node == titleNode || node == hiddenNode ? nil : node
+    }
+  }
+
   override public final func getPostamble() -> String {
     return ""
   }

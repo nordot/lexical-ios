@@ -236,6 +236,13 @@ public func getRoot() -> RootNode? {
   return rootNode
 }
 
+public func getFlagShowTitlePlaceHolder() -> Bool? {
+  guard let editor = getActiveEditor() else {
+    return nil
+  }
+  return editor.getFlagShowTitlePlaceHolder()
+}
+
 func getEditorStateTextContent(editorState: EditorState) throws -> String {
   var textContent: String = ""
 

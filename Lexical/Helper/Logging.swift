@@ -39,9 +39,10 @@ public struct LogPayload {
 
 public extension Editor {
   func log(_ feature: LogFeature, _ level: LogLevel, _ string: String = "", _ callingFunction: String = #function) {
-    if level == .error || level == .warning {
-      let payload = LogPayload(feature: feature, level: level, string: string, callingFunction: callingFunction)
-      self.dispatchCommand(type: .log, payload: payload)
+    if level == .error {
+      // let payload = LogPayload(feature: feature, level: level, string: string, callingFunction: callingFunction)
+      // self.dispatchCommand(type: .log, payload: payload)
+      print("Error: \(string) in \(callingFunction)")
     }
   }
 }

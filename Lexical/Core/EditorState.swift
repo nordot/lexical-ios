@@ -37,6 +37,10 @@ public class EditorState: NSObject {
     return nodeMap
   }
 
+    public func setNodeMap(nodeMap: [NodeKey: Node]) {
+    self.nodeMap = nodeMap
+  }
+
   /// Allows you to interrogate the contents of this EditorState without having to attach it to an Editor.
   public func read<V>(closure: () throws -> V) throws -> V {
     return try beginRead(activeEditorState: self, closure: closure)

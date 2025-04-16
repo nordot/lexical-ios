@@ -63,7 +63,7 @@ public extension LexicalViewDelegate {
     titlePlaceholderText: LexicalPlaceholderText? = nil
   ) {
     self.textView = TextView(editorConfig: editorConfig, featureFlags: featureFlags)
-    self.textView.showsVerticalScrollIndicator = false
+    self.textView.showsVerticalScrollIndicator = true
     self.textView.clipsToBounds = true
     self.textView.accessibilityTraits = .staticText
     self.placeholderText = placeholderText

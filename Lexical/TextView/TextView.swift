@@ -620,7 +620,11 @@ private class TextViewDelegate: NSObject, UITextViewDelegate {
            let newEnd = textView.position(from: textView.beginningOfDocument, offset: validEnd),
            let newRange = textView.textRange(from: newStart, to: newEnd)
         {
+            textView.isUpdatingNativeSelection = true
+            defer { textView.isUpdatingNativeSelection = false }
             textView.selectedTextRange = newRange
+            onSelectionChange(editor: textView.editor, isLastLine: true)
+            return
         }
 
         // Skip native update if we're in the middle of programmatic changes

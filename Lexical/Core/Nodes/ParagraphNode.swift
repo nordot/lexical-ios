@@ -54,20 +54,19 @@ public class ParagraphNode: ElementNode {
     let newElement = createParagraphNode()
     let direction = getDirection()
     do {
-      if let selection = try getSelection() as? RangeSelection {
-          let selectedNodes = try selection.getNodes()
+        if let selection = try getSelection() as? RangeSelection {
           let anchor = selection.anchor
           let focus = selection.focus
           let isBackward = try selection.isBackward()
           let endOffset = isBackward ? focus.offset : anchor.offset
-          let firstNode = selectedNodes.first
-          let lastNode = selectedNodes.last
-          let topElementFirstNode = firstNode?.getTopLevelElement()
-          let topElementLastNode = lastNode?.getTopLevelElement()
-          let textContentSize = topElementFirstNode?.getTextContent().replacingOccurrences(of: "\n", with: "")
+          let selectedNode = isBackward ? try focus.getNode() : try anchor.getNode()
 
-          if topElementFirstNode == topElementLastNode && endOffset == textContentSize?.count {
-             selection.clearFormat()
+          let chilrenNodes = self.getChildren()
+          let lastNode = chilrenNodes.last
+          let textContentSize = lastNode?.getTextContent().replacingOccurrences(of: "\n", with: "").count
+
+          if selectedNode == lastNode && endOffset == textContentSize {
+              selection.clearFormat()
           }
       }
 

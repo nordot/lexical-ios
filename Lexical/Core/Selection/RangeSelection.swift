@@ -1239,7 +1239,7 @@ public class RangeSelection: BaseSelection {
     }
   }
 
-  internal func clearFormat() {
+  public func clearFormat() {
     format = TextFormat()
   }
 

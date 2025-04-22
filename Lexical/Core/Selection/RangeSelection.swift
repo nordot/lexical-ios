@@ -1048,9 +1048,18 @@ public class RangeSelection: BaseSelection {
   }
 
   // This method is the equivalent of applyDOMRange()
-  public func applyNativeSelection(_ nativeSelection: NativeSelection) throws {
+  public func applyNativeSelection(_ nativeSelection: NativeSelection, isLastLine: Bool = false) throws {
     guard let range = nativeSelection.range else { return }
-    try applySelectionRange(range, affinity: range.length == 0 ? .backward : nativeSelection.affinity)
+
+    let affinity: UITextStorageDirection = {
+      if isLastLine {
+        return .backward
+      } else {
+        return range.length == 0 ? .backward : nativeSelection.affinity
+      }
+    }()
+
+    try applySelectionRange(range, affinity: affinity)
   }
 
   internal func applySelectionRange(_ range: NSRange, affinity: UITextStorageDirection) throws {

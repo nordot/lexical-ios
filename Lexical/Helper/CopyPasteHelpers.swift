@@ -196,6 +196,9 @@ func appendNodesToArray(
   targetArray: [Node] = []) throws -> (shouldInclude: Bool, outArray: [Node]) {
   var array = targetArray
   var shouldInclude = selection != nil ? try currentNode.isSelected() : true
+  if let elementNode = currentNode as? ElementNode, elementNode.getChildrenSize() > 0 {
+    shouldInclude = true
+  }
   let shouldExclude = (currentNode as? ElementNode)?.excludeFromCopy() ?? false
   var clone = try cloneWithProperties(node: currentNode)
   (clone as? ElementNode)?.children = []

@@ -192,7 +192,7 @@ func checkIfTokenOrCanTextBeInserted(node: TextNode) -> Bool {
 }
 
 // triggered by selection change event from the UITextView
-internal func onSelectionChange(editor: Editor) {
+internal func onSelectionChange(editor: Editor, isLastLine: Bool = false) {
   // Note: we have to detect selection changes here even if an update is in progress, otherwise marked text breaks!
   do {
     try editor.updateWithCustomBehaviour(mode: UpdateBehaviourModificationMode(suppressReconcilingSelection: true, suppressSanityCheck: true)) {
@@ -211,7 +211,7 @@ internal func onSelectionChange(editor: Editor) {
         return // we should have a range selection by now, so this is unexpected
       }
 
-      try lexicalSelection.applyNativeSelection(nativeSelection)
+      try lexicalSelection.applyNativeSelection(nativeSelection, isLastLine: isLastLine)
 
       switch lexicalSelection.anchor.type {
       case .text:

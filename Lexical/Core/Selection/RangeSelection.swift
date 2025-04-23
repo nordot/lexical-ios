@@ -444,6 +444,8 @@ public class RangeSelection: BaseSelection {
              !lastNodeParent.canBeEmpty(),
              lastNodeParent.getChildrenSize() == 1 {
             try lastNodeParent.remove()
+          } else if let lastNode = lastNode as? LineBreakNode, lastNode.getNextSibling() != nil {
+              markedNodeKeysForKeep.insert(lastNode.key)
           } else {
             try lastNode?.remove()
           }
@@ -1048,9 +1050,18 @@ public class RangeSelection: BaseSelection {
   }
 
   // This method is the equivalent of applyDOMRange()
-  public func applyNativeSelection(_ nativeSelection: NativeSelection) throws {
+  public func applyNativeSelection(_ nativeSelection: NativeSelection, isLastLine: Bool = false) throws {
     guard let range = nativeSelection.range else { return }
-    try applySelectionRange(range, affinity: range.length == 0 ? .backward : nativeSelection.affinity)
+
+    let affinity: UITextStorageDirection = {
+      if isLastLine {
+        return .backward
+      } else {
+        return range.length == 0 ? .backward : nativeSelection.affinity
+      }
+    }()
+
+    try applySelectionRange(range, affinity: affinity)
   }
 
   internal func applySelectionRange(_ range: NSRange, affinity: UITextStorageDirection) throws {
@@ -1230,7 +1241,7 @@ public class RangeSelection: BaseSelection {
     }
   }
 
-  internal func clearFormat() {
+  public func clearFormat() {
     format = TextFormat()
   }
 

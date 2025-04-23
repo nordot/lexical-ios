@@ -122,15 +122,24 @@ protocol LexicalTextViewDelegate: NSObjectProtocol {
     }
 
     override public func caretRect(for position: UITextPosition) -> CGRect {
-        var rect = super.caretRect(for: position)
-        guard let font = self.font else { return rect }
+        var caretRect = super.caretRect(for: position)
+        let characterIndex = offset(from: beginningOfDocument, to: position)
 
-        let targetHeight = font.lineHeight
+        guard layoutManager.isValidGlyphIndex(characterIndex) else {
+            return caretRect
+        }
 
-        rect.origin.y += (rect.height - targetHeight) / 2
-        rect.size.height = targetHeight
+        let glyphIndex = layoutManager.glyphIndexForCharacter(at: characterIndex)
+        let usedLineFragment = layoutManager.lineFragmentUsedRect(forGlyphAt: glyphIndex, effectiveRange: nil)
 
-        return rect
+        guard !usedLineFragment.isEmpty else {
+            return caretRect
+        }
+
+        caretRect.origin.y = usedLineFragment.origin.y + textContainerInset.top
+        caretRect.size.height = usedLineFragment.size.height
+
+        return caretRect
     }
 
     override public var inputDelegate: UITextInputDelegate? {
@@ -611,7 +620,11 @@ private class TextViewDelegate: NSObject, UITextViewDelegate {
            let newEnd = textView.position(from: textView.beginningOfDocument, offset: validEnd),
            let newRange = textView.textRange(from: newStart, to: newEnd)
         {
+            textView.isUpdatingNativeSelection = true
+            defer { textView.isUpdatingNativeSelection = false }
             textView.selectedTextRange = newRange
+            onSelectionChange(editor: textView.editor, isLastLine: true)
+            return
         }
 
         // Skip native update if we're in the middle of programmatic changes

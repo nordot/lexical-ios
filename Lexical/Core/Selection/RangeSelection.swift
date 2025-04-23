@@ -444,6 +444,8 @@ public class RangeSelection: BaseSelection {
              !lastNodeParent.canBeEmpty(),
              lastNodeParent.getChildrenSize() == 1 {
             try lastNodeParent.remove()
+          } else if let lastNode = lastNode as? LineBreakNode, lastNode.getNextSibling() != nil {
+              markedNodeKeysForKeep.insert(lastNode.key)
           } else {
             try lastNode?.remove()
           }

@@ -135,7 +135,7 @@ public class RangeSelection: BaseSelection {
         selectedNodes.removeFirst()
       } else if startOffset != 0 {
         let splitNodes = try firstNode.splitText(splitOffsets: [startOffset])
-        selectedNodes[0] = splitNodes[0]
+        selectedNodes[0] = splitNodes[1]
       }
     }
 

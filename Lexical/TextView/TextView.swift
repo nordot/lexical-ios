@@ -512,8 +512,8 @@ protocol LexicalTextViewDelegate: NSObjectProtocol {
             guard shouldShowTitlePlaceHolder || shouldShowBodyPlaceHolder else { return }
 
             try editor.read {
-                titleLabel.isHidden = !canShowTitlePlaceholder(isComposing: editor.isComposing())
-                placeholderLabel.isHidden = !canShowBodyPlaceholder(isComposing: editor.isComposing())
+                titleLabel.isHidden = !canShowTitlePlaceholder(isComposing: false)
+                placeholderLabel.isHidden = !canShowBodyPlaceholder(isComposing: false)
 
                 layoutIfNeeded()
             }

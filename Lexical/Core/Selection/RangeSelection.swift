@@ -445,11 +445,12 @@ public class RangeSelection: BaseSelection {
              lastNodeParent.getChildrenSize() == 1 {
             try lastNodeParent.remove()
           } else {
+            let lastNodeTopElement = lastNodeParent?.getChildren().last
             if let lastNode = lastNode as? LineBreakNode, isQuoteNode(lastNodeParent) || isCodeNode(lastNodeParent) {
-              if firstNodeTextLength > 0 {
-                  try lastNode.remove()
-              } else {
+              if firstNodeTextLength == 0 && lastNode != lastNodeTopElement {
                   markedNodeKeysForKeep.insert(lastNode.key)
+              } else {
+                  try lastNode.remove()
               }
             } else {
               try lastNode?.remove()

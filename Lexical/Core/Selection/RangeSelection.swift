@@ -445,13 +445,23 @@ public class RangeSelection: BaseSelection {
              lastNodeParent.getChildrenSize() == 1 {
             try lastNodeParent.remove()
           } else {
-            let lastNodeTopElement = lastNodeParent?.getChildren().last
             if let lastNode = lastNode as? LineBreakNode, isQuoteNode(lastNodeParent) || isCodeNode(lastNodeParent) {
-              if firstNodeTextLength == 0 && lastNode != lastNodeTopElement {
-                  markedNodeKeysForKeep.insert(lastNode.key)
-              } else {
-                  try lastNode.remove()
-              }
+                if !text.isEmpty {
+                    markedNodeKeysForKeep.insert(lastNode.key)
+                } else {
+                    let children = lastNodeParent?.getChildren()
+                    let lastNodeTopElement = children?.last
+                    let lastNodePreviousSibling = lastNode.getPreviousSibling()
+
+                    if firstNodeTextLength == 0 && (
+                        lastNode != lastNodeTopElement ||
+                        lastNode == lastNodeTopElement && lastNodePreviousSibling is LineBreakNode
+                    ) {
+                        markedNodeKeysForKeep.insert(lastNode.key)
+                    } else {
+                        try lastNode.remove()
+                    }
+                }
             } else {
               try lastNode?.remove()
             }

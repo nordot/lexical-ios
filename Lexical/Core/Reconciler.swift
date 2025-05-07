@@ -225,6 +225,13 @@ internal enum Reconciler {
             && pointForAddition.offset + length <= attributedString.length
           {
             markedTextAttributedString = attributedString
+          // If the insertion part is text but does not match the marked text point's node key,
+          // and the insertion location is immediately after the marked text point's offset,
+          // update the marked text attributed string and adjust the marked text point's key and offset.
+          } else if insertion.part == .text && pointForAddition.key != insertion.nodeKey, insertion.location - pointForAddition.offset == 1  {
+            markedTextAttributedString = attributedString
+            markedTextPointForAddition?.key = insertion.nodeKey
+            markedTextPointForAddition?.offset = 0
           }
         }
       }

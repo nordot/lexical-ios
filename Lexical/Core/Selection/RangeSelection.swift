@@ -244,13 +244,15 @@ public class RangeSelection: BaseSelection {
     return textContent
   }
 
-  public func insertText(_ text: String) throws {
+  public func insertText(_ inputText: String) throws {
     let anchor = anchor
     let focus = focus
     let anchorIsBefore = try anchor.isBefore(point: focus)
     let isBefore = isCollapsed() || anchorIsBefore
     let format = format
     let style = style
+    let isDelete = inputText == "delete"
+    let text = isDelete ? "" : inputText
 
     if isBefore && anchor.type == .element {
       try transferStartingElementPointToTextPoint(start: anchor, end: focus, format: format, style: style)
@@ -476,7 +478,22 @@ public class RangeSelection: BaseSelection {
       // Either move the remaining nodes of the last parent to after
       // the first child, or remove them entirely. If the last parent
       // is the same as the first parent, this logic also works.
-      let lastNodeChildren = lastElement?.getChildren() ?? []
+      // If lastNode is CodeNode or QuoteNode, we only want to
+      // move the first child of the lastNode.
+      var lastNodeChildren: [Node] = lastElement?.getChildren() ?? []
+      if (lastElement is CodeNode || lastElement is QuoteNode)
+        && isDelete
+        && firstElement != lastElement
+        && !lastNodeChildren.isEmpty {
+          let firstChild = lastNodeChildren.first!
+          lastNodeChildren = [firstChild]
+          if let nextSibling = firstChild.getNextSibling() as? LineBreakNode,
+            firstChild is TextNode {
+              try nextSibling.remove()
+          } else if firstChild is LineBreakNode {
+            try firstChild.remove()
+          }
+      }
       let selectedNodesSet = Set(selectedNodes)
       let firstAndLastElementsAreEqual = firstElement == lastElement
 
@@ -1034,7 +1051,7 @@ public class RangeSelection: BaseSelection {
   }
 
   internal func removeText() throws {
-    try insertText("")
+    try insertText("delete")
   }
 
   internal func modify(alter: NativeSelectionModificationType, isBackward: Bool, granularity: UITextGranularity) throws {

@@ -281,7 +281,7 @@ open class TextNode: Node {
     var attributeDictionary = super.getAttributedStringAttributes(theme: theme)
 
     // TODO: Remove this once codeHighlight node is implemented
-    if let parent, let _ = getNodeByKey(key: parent) as? CodeNode {
+    if let parent, let node = getNodeByKey(key: parent), node is CodeNode || node is QuoteNode {
       format = TextFormat()
     }
 

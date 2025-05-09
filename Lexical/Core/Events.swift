@@ -94,7 +94,7 @@ internal func onDeleteBackwardsFromUITextView(editor: Editor) throws {
 
     if firstNode == bodyNodes.first && startOffset == 0 {
         if bodyNodes.count > 1 {
-            try selection.deleteCharacter(isBackwards: true)
+            try selection.deleteCharacter(isBackwards: false)
         } else if let firstNode, !(firstNode is ParagraphNode) {
             setBlocksType(selection: selection, createElement: { createParagraphNode() } )
         }

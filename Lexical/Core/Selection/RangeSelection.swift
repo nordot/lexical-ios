@@ -484,9 +484,9 @@ public class RangeSelection: BaseSelection {
       // and inline starting parent element with a starting node that has no
       // siblings, we should insert after the starting parent element, otherwise
       // we will incorrectly merge into the starting parent element.
-      // TODO: should we keep on traversing parents if we're inside another
-      // nested inline element?
       let insertionTarget = firstElement.isInline() && firstNode.getNextSibling() == nil ? firstElement : firstNode
+      let topElement = isRootNode(node: insertionTarget.getParent()) ? insertionTarget : insertionTarget.getTopLevelElement()
+      var prevNode: Node?
 
       for (_, lastNodeChild) in lastNodeChildren.enumerated().reversed() {
         if lastNodeChild.isSameNode(firstNode) || ((lastNodeChild as? ElementNode)?.isParentOf(firstNode) ?? false) {
@@ -496,7 +496,25 @@ public class RangeSelection: BaseSelection {
         if lastNodeChild.isAttached() {
           if !selectedNodesSet.contains(lastNodeChild) || lastNodeChild == lastElementChild {
             if !firstAndLastElementsAreEqual {
-              try insertionTarget.insertAfter(nodeToInsert: lastNodeChild)
+              if lastElement is CodeNode || lastElement is QuoteNode {
+                  if lastNodeChild is TextNode {
+                      let paragraphNode = createParagraphNode()
+                      try paragraphNode.append([lastNodeChild])
+                      try topElement?.insertAfter(nodeToInsert: paragraphNode)
+                  } else if lastNodeChild is LineBreakNode {
+                      if prevNode is LineBreakNode {
+                          let paragraphNode = createParagraphNode()
+                          try paragraphNode.append([createTextNode(text: "")])
+                          try topElement?.insertAfter(nodeToInsert: paragraphNode)
+                      }
+
+                      try lastNodeChild.remove()
+                  }
+
+                  prevNode = lastNodeChild
+              } else {
+                try insertionTarget.insertAfter(nodeToInsert: lastNodeChild)
+              }
             }
           } else {
             try lastNodeChild.remove()

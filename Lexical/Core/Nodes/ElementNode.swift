@@ -453,7 +453,7 @@ open class ElementNode: Node {
   }
 
   @discardableResult
-  func clear() throws -> ElementNode {
+  public func clear() throws -> ElementNode {
     try errorOnReadOnly()
 
     let writableSelf = try getWritable()

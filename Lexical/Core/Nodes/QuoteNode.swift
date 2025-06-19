@@ -43,7 +43,12 @@ public class QuoteNode: ElementNode {
         }
 
         if attributeDictionary[.quoteCustomDrawing] == nil {
-            let customAttr = QuoteCustomDrawingAttributes(barColor: UIColor.gray, barWidth: 4, rounded: false, barInsets: UIEdgeInsets())
+            let customAttr = QuoteCustomDrawingAttributes(
+                barColor: attributeDictionary[.quoteBarColor] as? UIColor ?? UIColor.gray,
+                barWidth: attributeDictionary[.quoteBarWidth] as? CGFloat ?? 4,
+                rounded: false,
+                barInsets: UIEdgeInsets()
+            )
             attributeDictionary[.quoteCustomDrawing] = customAttr
         }
 
@@ -121,6 +126,8 @@ public class QuoteNode: ElementNode {
 
 public extension NSAttributedString.Key {
     static let quoteCustomDrawing: NSAttributedString.Key = .init(rawValue: "quoteCustomDrawing")
+    static let quoteBarColor: NSAttributedString.Key = .init(rawValue: "quoteBarColor")
+    static let quoteBarWidth: NSAttributedString.Key = .init(rawValue: "quoteBarWidth")
 }
 
 extension QuoteNode {

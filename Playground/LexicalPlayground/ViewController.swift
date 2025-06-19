@@ -48,10 +48,18 @@ class ViewController: UIViewController, UIToolbarDelegate {
             .foregroundColor: UIColor.systemBlue
         ]
         theme.quote = [
+            .quoteBarColor: UIColor.gray,
+            .quoteBarWidth: 4,
             .paddingHead: 8,
             .paddingTail: -8,
             .fontSize: 16,
             .lineHeight: 24
+        ]
+        theme.code = [
+            .codeBorderColor: UIColor.gray.withAlphaComponent(0.3),
+            .codeBorderWidth: 1,
+            .paddingHead: 4.0,
+            .paddingTail: -4.0
         ]
         theme.setBlockLevelAttributes(
             .code,

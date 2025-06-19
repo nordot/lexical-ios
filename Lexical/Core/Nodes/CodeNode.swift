@@ -31,8 +31,9 @@ import UIKit
 }
 
 public extension NSAttributedString.Key {
-    static let codeBlockCustomDrawing: NSAttributedString.Key = .init(
-        rawValue: "codeBlockCustomDrawing")
+    static let codeBlockCustomDrawing: NSAttributedString.Key = .init(rawValue: "codeBlockCustomDrawing")
+    static let codeBorderColor: NSAttributedString.Key = .init(rawValue: "codeBorderColor")
+    static let codeBorderWidth: NSAttributedString.Key = .init(rawValue: "codeBorderWidth")
 }
 
 public class CodeNode: ElementNode {
@@ -110,9 +111,9 @@ public class CodeNode: ElementNode {
 
         if attributeDictionary[.codeBlockCustomDrawing] == nil {
             let customAttr = CodeBlockCustomDrawingAttributes(
-                background: UIColor.gray.withAlphaComponent(0.3),
-                border: UIColor.gray.withAlphaComponent(0.3),
-                borderWidth: 1
+                background: attributeDictionary[.codeBorderColor] as? UIColor ?? UIColor.gray.withAlphaComponent(0.3),
+                border: attributeDictionary[.codeBorderColor] as? UIColor ?? UIColor.gray.withAlphaComponent(0.3),
+                borderWidth: attributeDictionary[.codeBorderWidth] as? CGFloat ?? 1
             )
             attributeDictionary[.codeBlockCustomDrawing] = customAttr
         }

@@ -158,11 +158,9 @@ extension CodeNode {
             else { return }
 
             context.setFillColor(attributeValue.background.cgColor)
-
+            context.setStrokeColor(attributeValue.border.cgColor)
             let bezierPath = UIBezierPath(roundedRect: rect, cornerRadius: attributeValue.cornerRadius)
             bezierPath.fill()
-
-            attributeValue.border.setStroke()
             bezierPath.lineWidth = attributeValue.borderWidth
             bezierPath.stroke()
         }

@@ -10,15 +10,17 @@ import UIKit
 // This is an ObjC class because it needs to conform to NSObject's equality, otherwise the Layout Manager
 // can't iterate through attributes properly.
 @objc public class CodeBlockCustomDrawingAttributes: NSObject {
-    public init(background: UIColor, border: UIColor, borderWidth: CGFloat) {
+    public init(background: UIColor, border: UIColor, borderWidth: CGFloat, cornerRadius: CGFloat) {
         self.background = background
         self.border = border
         self.borderWidth = borderWidth
+        self.cornerRadius = cornerRadius
     }
 
     let background: UIColor
     let border: UIColor
     let borderWidth: CGFloat
+    let cornerRadius: CGFloat
 
     override public func isEqual(_ object: Any?) -> Bool {
         let lhs = self
@@ -26,14 +28,16 @@ import UIKit
             return false
         }
         return lhs.background == rhs.background && lhs.border == rhs.border
-            && lhs.borderWidth == rhs.borderWidth
+        && lhs.borderWidth == rhs.borderWidth && lhs.cornerRadius == rhs.cornerRadius
     }
 }
 
 public extension NSAttributedString.Key {
     static let codeBlockCustomDrawing: NSAttributedString.Key = .init(rawValue: "codeBlockCustomDrawing")
+    static let codeBackgroundColor: NSAttributedString.Key = .init(rawValue: "codeBackgroundColor")
     static let codeBorderColor: NSAttributedString.Key = .init(rawValue: "codeBorderColor")
     static let codeBorderWidth: NSAttributedString.Key = .init(rawValue: "codeBorderWidth")
+    static let codeCornerRadius: NSAttributedString.Key = .init(rawValue: "codeCornerRadius")
 }
 
 public class CodeNode: ElementNode {
@@ -111,9 +115,10 @@ public class CodeNode: ElementNode {
 
         if attributeDictionary[.codeBlockCustomDrawing] == nil {
             let customAttr = CodeBlockCustomDrawingAttributes(
-                background: attributeDictionary[.codeBorderColor] as? UIColor ?? UIColor.gray.withAlphaComponent(0.3),
+                background: attributeDictionary[.codeBackgroundColor] as? UIColor ?? UIColor.gray.withAlphaComponent(0.3),
                 border: attributeDictionary[.codeBorderColor] as? UIColor ?? UIColor.gray.withAlphaComponent(0.3),
-                borderWidth: attributeDictionary[.codeBorderWidth] as? CGFloat ?? 1
+                borderWidth: attributeDictionary[.codeBorderWidth] as? CGFloat ?? 1,
+                cornerRadius: attributeDictionary[.codeCornerRadius] as? CGFloat ?? 8
             )
             attributeDictionary[.codeBlockCustomDrawing] = customAttr
         }
@@ -153,10 +158,13 @@ extension CodeNode {
             else { return }
 
             context.setFillColor(attributeValue.background.cgColor)
-            context.fill(rect)
 
-            context.setStrokeColor(attributeValue.border.cgColor)
-            context.stroke(rect, width: attributeValue.borderWidth)
+            let bezierPath = UIBezierPath(roundedRect: rect, cornerRadius: attributeValue.cornerRadius)
+            bezierPath.fill()
+
+            attributeValue.border.setStroke()
+            bezierPath.lineWidth = attributeValue.borderWidth
+            bezierPath.stroke()
         }
     }
 }

@@ -56,8 +56,10 @@ class ViewController: UIViewController, UIToolbarDelegate {
             .lineHeight: 24
         ]
         theme.code = [
-            .codeBorderColor: UIColor.gray.withAlphaComponent(0.3),
+            .codeBorderColor: UIColor.gray.withAlphaComponent(0.5),
+            .codeBackgroundColor: UIColor.gray.withAlphaComponent(0.3),
             .codeBorderWidth: 1,
+            .codeCornerRadius: 8,
             .paddingHead: 4.0,
             .paddingTail: -4.0
         ]
